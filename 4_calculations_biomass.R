@@ -17,7 +17,8 @@
 # Implement this step to load the biomass equations.
 
 #----------------
-#Bm_equa <- 
+Bm_equa <- read.csv("https://raw.githubusercontent.com/ecmccart/forestry_lab1/refs/heads/main/Biomass%20Equation.csv?token=GHSAT0AAAAAADAORX76S3VREUOIEGQ456XSZ7PJ6YQ") %>%
+  select(b0, b1, Chojnacky_Code)
 #----------------
 
 ### Step 4.2: Merge Biomass Equations with Tree Data
@@ -31,7 +32,8 @@
 # Implement this step to merge the biomass equations with the tree data.
 
 #----------------
-#trees <- trees %>%
+trees <- trees %>%
+  left_join(Bm_equa, by = "Chojnacky_Code")
 #----------------
 
 ### Step 4.3: Calculate Biomass
@@ -46,7 +48,8 @@
 # Implement this step to calculate the biomass for each tree.
 
 #----------------
-#trees <- trees %>%
+trees <- trees %>%
+  mutate(biomass = exp(b0 + b1 + log(DBH * 2.54)))
 #----------------
 
 ### Step 4.4: Filter Biomass Data
@@ -57,7 +60,8 @@
 #   - For example, `filter(column != 0)` will keep all rows where the value in `column` is not zero.
 
 #----------------
-#trees <- trees %>%
+trees <- trees %>%
+  filter(b0 != 0 & b1 != 0)
 #----------------
 
 ### Step 4.5: Aggregate Biomass by Plot
@@ -70,7 +74,9 @@
 #   dataframe <- dataframe %>% group_by(group_column) %>% summarise(column = sum(column))
 
 #----------------
-#sum_u2_bm <- trees %>%
+sum_u2_bm <- trees %>%
+  group_by(Plot) %>%
+  summarise(biomass = sum(biomass))
 #----------------
 
 ### Step 4.6: Calculate Biomass per Acre
@@ -83,7 +89,8 @@
 #   dataframe <- dataframe %>% mutate(new_column = column * Expansion Factor (EF))
 
 #----------------
-#sum_u2_bm <- sum_u2_bm %>%
+sum_u2_bm <- sum_u2_bm %>%
+  mutate(bm_pa = biomass * unique(trees$EF))
 #----------------
 
 ### Step 4.7: Merge Biomass Data with Existing Summary
@@ -95,22 +102,25 @@
 #   dataframe1 <- dataframe1 %>% left_join(dataframe2, by = "common_column")
 
 #----------------
-#sum_u2 <- sum_u2 %>%
+sum_u2 <- sum_u2 %>%
+  left_join(sum_u2_bm, by = "Plot")
 #----------------
 
 
 # Question: Which plot has the highest amount of biomass?
 #   - To find the plot with the highest biomass, you can sort the `sum_u2` dataframe by the `bm_pa` column in descending order.
 # YOUR ANSWER
+#     D1 has the highest amount of biomass. 
 
 #----------------
-#sum_u2 %>%
+sum_u2 %>%
+  arrange(desc(bm_pa))
 #---------
 
 # Checkpoint: Review the Largest bm_pa Values
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Use the following code to verify your results:
-#head(sum_u2 %>% arrange(desc(bm_pa)))
+head(sum_u2 %>% arrange(desc(bm_pa)))
 
 #     # A tibble: 6 × 5
 #    Plot     BA   TPA biomass   bm_pa

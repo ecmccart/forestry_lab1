@@ -17,7 +17,9 @@
 # Implement this step to merge all relevant data into `sum_u2`.
 
 #----------------
-#sum_u2 <- sum_u2 %>%
+sum_u2 <- sum_u2 %>%
+  left_join(dom_cnt, by = "Plot") %>%
+  left_join(richness, by = "Plot")
 #----------------
 
 ### Step 6.1.1: Add Species Information and Rename Columns
@@ -35,9 +37,11 @@
 # Implement this step to add species information and rename columns.
 
 #----------------
-#sum_u2 <- sum_u2 %>%
+sum_u2 <- sum_u2 %>%
+  left_join(SppCode[,c('SppCode','Common.name')], by = c("Code" = "SppCode"))
 
-#sum_u2 <- sum_u2 %>% rename()
+sum_u2 <- sum_u2 %>% 
+  rename(Dom_species = Code, Abundance = n)
 #----------------
 
 ### Step 6.3: Convert Biomass Units
@@ -51,7 +55,7 @@
 # Implement this step to convert biomass units.
 
 #----------------
-
+sum_u2$bm_tonpa <- sum_u2$bm_pa / 1000
 #----------------
 
 ### Step 6.4: Apply Dominance Threshold
@@ -66,13 +70,16 @@
 # Implement this step to apply the dominance threshold.
 
 #----------------
-#sum_u2 <-
+sum_u2 <- sum_u2 %>%
+  mutate(Dom_species = ifelse(rel_abd > 50, Dom_species, "Mixed"),
+         Common.name = ifelse(rel_abd > 50, Common.name, "Mixed"))
 
 # Remove duplicate rows
-#sum_u2 <- 
+sum_u2 <- sum_u2 %>% distinct() 
 #----------------
 
 # Question 9: What’s the dominant species of plot D5 now? Compare with your previous answer.
+#     The most dominant species of plot D5 now is Mixed. The previous answer was Chestnut oak. 
 
 ### Step 6.5: Save the Final Dataset and Commit to GitHub
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,5 +93,34 @@
 # Implement this step to save the final dataset.
 
 #----------------
-#write.csv()
+write.csv(sum_u2, "sum_u2_dplyr.csv", row.names = FALSE)
 #----------------
+
+library(ggplot2)
+ggplot(sum_u2, aes(TPA)) + geom_histogram() + labs(title = "TPA Distribution")
+
+ggplot(sum_u2, aes(TPA)) + 
+  geom_histogram() + 
+  labs(title = "TPA Distribution", x = "Trees Per Acre (TPA)", y = "Number of Plots") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(sum_u2, aes(BA)) + 
+  geom_histogram() + 
+  labs(title = "Basal Area", x = "Basal Area (BA)", y = "Number of Plots") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(sum_u2, aes(biomass)) + 
+  geom_histogram() + 
+  labs(title = "Biomass", x = "Biomass", y = "Number of Plots") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+library(forcats)
+ggplot(sum_u2[sum_u2$Common.name!='Mixed',],
+       aes(fct_infreq(Common.name))) + geom_bar() + labs(title = "Dominant Species by Plot")
+
+sum_u2 %>%
+  filter(Common.name != "Mixed") %>%
+  ggplot(aes(fct_infreq(Common.name))) +
+  geom_bar() +
+  labs(title = "Dominant Species by Plot", x = "Species", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5))

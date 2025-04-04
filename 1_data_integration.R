@@ -1,3 +1,5 @@
+
+
 ################################################################################
 #                                                                              #
 #                           1. Data Integration                                #
@@ -22,7 +24,8 @@
 # Ensure you use the correct "raw" URL for the file.
 
 #----------------
-#u2_data <- read.csv()
+u2_data <- read.csv('https://raw.githubusercontent.com/ecmccart/forestry_lab1/refs/heads/main/U2_2017data.csv?token=GHSAT0AAAAAADAORX77U2G7234S5UDJ3VESZ7PJ4RA')
+str(u2_data)
 #----------------
 
 ### Step 1.3: Explore the structure and summary of the dataframe
@@ -30,7 +33,9 @@
 # Use str(), skimr::skim(), and dplyr::glimpse() to understand the dataframe.
 
 #----------------
-
+str(u2_data)
+skimr::skim(u2_data)
+dplyr::glimpse(u2_data)
 #----------------
 
 ### Step 1.4: Remove missing values from the DBH and Code columns using dplyr
@@ -42,7 +47,10 @@
 # Implement your solution using this approach.
 
 #----------------
-#u2_data <- 
+library(tidyverse)
+
+clean_data <- u2_data %>%
+  filter(!is.na(DBH) & !is.na(Code))
 #----------------
 
 ### Step 1.5: Keep only overstory trees (Class = "O") using dplyr
@@ -55,7 +63,8 @@
 # Implement your solution using this approach.
 
 #----------------
-#u2_data <-
+u2_data <- clean_overstory <- clean_data %>%
+  filter(Class == "O")
 #----------------
 
 ### Step 1.6: Read the Species_Codes.csv File and Merge It with u2_data_overstory
@@ -64,7 +73,7 @@
 # Make sure to use the "Raw" URL of the file.
 
 #----------------     
-#SppCode <- read.csv()
+SppCode <- read.csv('https://raw.githubusercontent.com/ecmccart/forestry_lab1/refs/heads/main/Species_Codes.csv?token=GHSAT0AAAAAADAORX76ANB3YJYWTHDEAYJYZ7PJ5NA')
 #---------------- 
 
 # Merge u2_data with SppCode using merge.data.frame.
@@ -79,7 +88,11 @@
 # Implement your solution using this approach and store the result in trees_merge.
 
 #----------------
-#trees_merge <- merge() 
+trees_merge <- merge(x = u2_data, 
+                     y = SppCode, 
+                     by.x = "Code", 
+                     by.y = "SppCode", 
+                     all.x = TRUE)
 #----------------
 
 ### Step 1.7: Create a new dataset named trees
@@ -92,13 +105,16 @@
 # Implement your solution using this approach.
 
 #----------------
-#trees <- trees_merge %>%
+library(dplyr)
+
+trees <- trees_merge %>%
+  select(Plot, Code, Genus, Common.name, DBH, Chojnacky_Code)
 #----------------  
 
 # Checkpoint: Review the Largest DBH Values
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Use the following code to verify your results:
-#head(trees %>% arrange(desc(DBH)))
+head(trees %>% arrange(desc(DBH)))
 
 # Your results should look similar to this:
 #     Plot Code        Genus  Common.name  DBH Chojnacky_Code
